@@ -1,0 +1,49 @@
+name: 'Nightly Run All Tests - dev'
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: '25 * * * *'
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Run Tests on Dev
+    runs-on: ubuntu-latest
+    container: petercaitensnano/sf-build:latest
+    concurrency: build
+    environment: Build
+
+    steps:
+      - name: Check versions
+        run: |
+          sfdx --version
+          sfdx plugins --core
+          sfdx plugins
+          git --version
+
+      - name: Checkout Current Branch
+        uses: actions/checkout@v2
+
+      - name: Connect to Salesforce Org
+        uses: ./.github/actions/sfdx-auth
+        with:
+          sfdx-client-id: ${{ secrets.CONSUMER_KEY }}
+          sfdx-username: ${{ secrets.SFDX_USERNAME }}
+          sfdc-instanceurl:  ${{ secrets.SFDC_INSTANCE_URL }}
+        env:
+          SFDX_JWT_SECRET_KEY: ${{ secrets.SFDX_SERVER_KEY }}
+
+      - name: Run All Local Tests
+        run: sfdx force:apex:test:run --testlevel RunLocalTests --codecoverage --detailedcoverage --resultformat json --wait 120 --verbose --outputdir .tests/apex
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            sonar.apex.coverage.reportPath=tests/apex/test-result-codecoverage.json
+
