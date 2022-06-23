@@ -63,6 +63,7 @@ jobs:
       - name: Authorise Salesforce [${{ inputs.SANDBOX_TARGET }}] Org
         run: |
           echo "${{ secrets.SFDX_SERVER_KEY }}" > server.key
+          tree .
           sfdx force:auth:jwt:grant --clientid ${{ secrets.CONSUMER_KEY }} --username ${{ secrets.SFDX_USERNAME }} --instanceurl ${{ secrets.SFDC_INSTANCE_URL }} --jwtkeyfile server.key --setdefaultusername
           rm server.key
 
