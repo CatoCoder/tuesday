@@ -1,0 +1,41 @@
+name: '2. Staging Pipeline'
+on:
+  pull_request:
+    branches: [ staging ]
+  push:
+    branches: [ staging ]
+
+jobs:
+  validate:
+    name: Validate Changes in Scratch Org [cato_staging]
+    if: ${{ github.event_name == 'pull_request' }}
+    uses: ./.github/workflows/deploy.yml
+    with:
+      SANDBOX_TARGET: cato_staging
+      ENVIRONMENT: Staging
+      TO_BRANCH: ${{ github.head_ref }}
+      FROM_BRANCH: staging
+      BUILD_TYPE: Check
+    secrets:
+      CONSUMER_KEY: ${{ secrets.CONSUMER_KEY }}
+      SFDX_USERNAME: ${{ secrets.SFDX_USERNAME }}
+      SFDC_INSTANCE_URL: ${{ secrets.SFDC_INSTANCE_URL }}
+      SFDX_SERVER_KEY: ${{ secrets.SFDX_SERVER_KEY }}
+
+
+
+  deploy:
+    name: Deploy Changes Into Scratch Org [cato_staging]
+    if: ${{ github.event_name == 'push' }}
+    uses: ./.github/workflows/deploy.yml
+    with:
+      SANDBOX_TARGET: cato_staging
+      ENVIRONMENT: Staging
+      TO_BRANCH: staging
+      FROM_BRANCH: main
+      BUILD_TYPE: Deploy
+    secrets:
+      CONSUMER_KEY: ${{ secrets.CONSUMER_KEY }}
+      SFDX_USERNAME: ${{ secrets.SFDX_USERNAME }}
+      SFDC_INSTANCE_URL: ${{ secrets.SFDC_INSTANCE_URL }}
+      SFDX_SERVER_KEY: ${{ secrets.SFDX_SERVER_KEY }}

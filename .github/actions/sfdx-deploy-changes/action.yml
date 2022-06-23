@@ -1,0 +1,37 @@
+name: Deploy Changes Between branches
+description: Detects and deploys the changes between the 2 Git branches and prepares the files to release.
+inputs:
+  from-branch:
+    description: The base branch to compare for the changes
+    required: true
+  to-branch:
+    description: The branch with the changes to deploy
+    required: true
+  target-environment:
+    description: The name of the Salesforce environment that is the destination for the changes
+    required: true
+  build-type:
+    description: The type of build being performed { Deploy | Check }
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Show diagnostics
+      run: |
+        echo -e "$YELLOW_TEXT Deploy Folder Contents"
+        echo -e "$YELLOW_TEXT ---------------------- $BLUE_TEXT"
+        tree -a ./${{ env.DEPLOY_FOLDER }}
+        echo -e "$YELLOW_TEXT package.xml Contents"
+        echo -e "$YELLOW_TEXT ---------------------- $BLUE_TEXT"
+        cat ./${{ env.DEPLOY_FOLDER }}/package/package.xml
+        echo -e "/n$YELLOW_TEXT destructiveChanges.xml Contents"
+        echo -e "$YELLOW_TEXT ---------------------- $BLUE_TEXT"
+        cat ./${{ env.DEPLOY_FOLDER }}/destructiveChanges/destructiveChanges.xml
+      shell: bash
+
+    - name: Deploy changes to Salesforce
+      run: |
+        chmod +x  $GITHUB_ACTION_PATH/sfdx-deploy-changes.sh
+        $GITHUB_ACTION_PATH/sfdx-deploy-changes.sh "${{ inputs.target-environment }}" "${{ inputs.build-type }}"
+      shell: bash

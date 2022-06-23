@@ -1,0 +1,135 @@
+name: '4. Production Pipeline'
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    name: Validate Changes in Salesforce [Production]
+    uses: ./.github/workflows/deploy.yml
+    with:
+      SANDBOX_TARGET: SYS
+      SANDBOX_LINK: https://verteva.my.salesforce.com/
+      ENVIRONMENT: Production
+      TO_BRANCH: ${{ github.head_ref }}
+      FROM_BRANCH: main
+      BUILD_TYPE: Check
+      FAILURE_JSON: |
+        {
+          "text": "Production Validation FAILED for PR: [${{ github.head_ref }}]",
+          "blocks": [
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": ":no_entry: *FAILED* Validation `${{ github.head_ref }} -> main` in `PRODUCTION` Org"
+              }
+            },
+            {
+              "type": "context",
+              "elements": [
+                {
+                  "type": "mrkdwn",
+                  "text": "Validation requested by *${{ github.actor }}*."
+                }
+              ]
+            }
+          ]
+        }
+      SUCCESS_JSON: |
+        {
+          "text": "Successful Production validation of PR: [${{ github.head_ref }}]",
+          "blocks": [
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": ":white_check_mark::white_check_mark: Validated `${{ github.head_ref }} -> main` in `PRODUCTION` Org"
+              }
+            },
+            {
+              "type": "context",
+              "elements": [
+                {
+                  "type": "mrkdwn",
+                  "text": "Validation requested by *${{ github.actor }}*."
+                }
+              ]
+            }
+          ]
+        }
+    secrets:
+      SLACK_RELEASE_BOT_TOKEN: ${{ secrets.SLACK_RELEASE_BOT_TOKEN }}
+      CONSUMER_KEY: ${{ secrets.CONSUMER_KEY }}
+      SFDX_USERNAME: ${{ secrets.SFDX_USERNAME }}
+      SFDC_INSTANCE_URL: ${{ secrets.SFDC_INSTANCE_URL }}
+      SFDX_SERVER_KEY: ${{ secrets.SFDX_SERVER_KEY }}
+      SLACK_DEPLOYMENT_NOTIFICATION_CHANNEL: ${{ secrets.SLACK_DEPLOYMENT_NOTIFICATION_CHANNEL }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+
+
+  deploy:
+    name: Deploy Changes Into Salesforce [PRODUCTION]
+    needs: validate
+    if: ${{ success() }}
+    uses: ./.github/workflows/deploy.yml
+    with:
+      SANDBOX_TARGET: PRODUCTION
+      SANDBOX_LINK: https://verteva.my.salesforce.com/
+      ENVIRONMENT: Production
+      TO_BRANCH: ${{ github.head_ref }}
+      FROM_BRANCH: main
+      BUILD_TYPE: Deploy
+      FAILURE_JSON: |
+        {
+          "text": "Deployment FAILED to Salesforce [PRODUCTION]: [preprod]",
+          "blocks": [
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": ":octagonal_sign: *FAILED* Deployment `preprod` in `PRODUCTION` Org"
+              }
+            },
+            {
+              "type": "context",
+              "elements": [
+                {
+                  "type": "mrkdwn",
+                  "text": "Deployment requested by *${{ github.actor }}*."
+                }
+              ]
+            }
+          ]
+        }
+      SUCCESS_JSON: |
+        {
+          "text": "Successful deployment to Salesforce [PRODUCTION] [preprod]",
+          "blocks": [
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": ":green_heart::green_heart: Deployed `preprod` to `PRODUCTION` Org :tada::tada::tada:"
+              }
+            },
+            {
+              "type": "context",
+              "elements": [
+                {
+                  "type": "mrkdwn",
+                  "text": "Deployment requested by *${{ github.actor }}*."
+                }
+              ]
+            }
+          ]
+        }
+    secrets:
+      SLACK_RELEASE_BOT_TOKEN: ${{ secrets.SLACK_RELEASE_BOT_TOKEN }}
+      CONSUMER_KEY: ${{ secrets.CONSUMER_KEY }}
+      SFDX_USERNAME: ${{ secrets.SFDX_USERNAME }}
+      SFDC_INSTANCE_URL: ${{ secrets.SFDC_INSTANCE_URL }}
+      SFDX_SERVER_KEY: ${{ secrets.SFDX_SERVER_KEY }}
+      SLACK_DEPLOYMENT_NOTIFICATION_CHANNEL: ${{ secrets.SLACK_DEPLOYMENT_NOTIFICATION_CHANNEL }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

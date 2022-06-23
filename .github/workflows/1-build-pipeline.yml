@@ -1,0 +1,42 @@
+name: '1. Feature Pipeline'
+on:
+  pull_request:
+    branches: [ develop ]
+  push:
+    branches: [ develop ]
+
+jobs:
+  validate:
+    name: Validate Changes in Scratch Org [cato_develop]
+    if: ${{ github.event_name == 'pull_request' }}
+    uses: ./.github/workflows/deploy.yml
+    with:
+      SANDBOX_TARGET: cato_develop
+      ENVIRONMENT: Build
+      TO_BRANCH: ${{ github.head_ref }}
+      FROM_BRANCH: develop
+      BUILD_TYPE: Check
+    secrets:
+      CONSUMER_KEY: ${{ secrets.CONSUMER_KEY }}
+      SFDX_USERNAME: ${{ secrets.SFDX_USERNAME }}
+      SFDC_INSTANCE_URL: ${{ secrets.SFDC_INSTANCE_URL }}
+      SFDX_SERVER_KEY: ${{ secrets.SFDX_SERVER_KEY }}
+
+
+
+
+  deploy:
+    name: Deploy Changes Into Scratch Org [cato_develop]
+    if: ${{ github.event_name == 'push' }}
+    uses: ./.github/workflows/deploy.yml
+    with:
+      SANDBOX_TARGET: cato_develop
+      ENVIRONMENT: Build
+      TO_BRANCH: develop
+      FROM_BRANCH: main
+      BUILD_TYPE: Deploy
+    secrets:
+      CONSUMER_KEY: ${{ secrets.CONSUMER_KEY }}
+      SFDX_USERNAME: ${{ secrets.SFDX_USERNAME }}
+      SFDC_INSTANCE_URL: ${{ secrets.SFDC_INSTANCE_URL }}
+      SFDX_SERVER_KEY: ${{ secrets.SFDX_SERVER_KEY }}
