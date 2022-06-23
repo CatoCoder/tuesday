@@ -60,16 +60,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Compare changes to [${{ inputs.FROM_BRANCH }}] Branch
-        run: |
-          mkdir -p ${{ env.DEPLOY_FOLDER }}
-          export HOME=/root && sfdx sgd:source:delta --from origin/${{ inputs.FROM_BRANCH }} --to HEAD --output ${{ env.DEPLOY_FOLDER }} --generate-delta --source ${{ env.FORCE_APP_FOLDER}}/ --ignore build-settings/deployIgnore --ignore-destructive build-settings/destructiveIgnore
-
       - name: Authorise Salesforce [${{ inputs.SANDBOX_TARGET }}] Org
         run: |
           echo "${{ secrets.SFDX_SERVER_KEY }}" > server.key
           sfdx force:auth:jwt:grant --clientid ${{ secrets.CONSUMER_KEY }} --username ${{ secrets.SFDX_USERNAME }} --instanceurl ${{ secrets.SFDC_INSTANCE_URL }} --jwtkeyfile server.key --setdefaultusername
           rm server.key
+
+      - name: Compare changes to [${{ inputs.FROM_BRANCH }}] Branch
+        run: |
+          mkdir -p ${{ env.DEPLOY_FOLDER }}
+          export HOME=/root && sfdx sgd:source:delta --from origin/${{ inputs.FROM_BRANCH }} --to HEAD --output ${{ env.DEPLOY_FOLDER }} --generate-delta --source ${{ env.FORCE_APP_FOLDER}}/ --ignore build-settings/deployIgnore --ignore-destructive build-settings/destructiveIgnore
 
       - name: ${{ inputs.BUILD_TYPE }} changes between branches [${{ inputs.TO_BRANCH }}] and [${{ inputs.FROM_BRANCH }}] into Salesforce [${{ inputs.SANDBOX_TARGET }}] Org
         uses: ./.github/actions/sfdx-deploy-changes
