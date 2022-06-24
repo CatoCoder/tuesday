@@ -20,13 +20,13 @@ runs:
     - name: Show diagnostics
       run: |
         echo -e "$YELLOW_TEXT Deploy Folder Contents"
-        echo -e "$YELLOW_TEXT ---------------------- $BLUE_TEXT"
+        echo -e "$YELLOW_TEXT------------------------ $BLUE_TEXT"
         tree -a ./${{ env.DEPLOY_FOLDER }}
         echo -e "$YELLOW_TEXT package.xml Contents"
-        echo -e "$YELLOW_TEXT ---------------------- $BLUE_TEXT"
+        echo -e "$YELLOW_TEXT---------------------- $BLUE_TEXT"
         cat ./${{ env.DEPLOY_FOLDER }}/package/package.xml
-        echo -e "/n$YELLOW_TEXT destructiveChanges.xml Contents"
-        echo -e "$YELLOW_TEXT ---------------------- $BLUE_TEXT"
+        echo -e "\n$YELLOW_TEXT destructiveChanges.xml Contents"
+        echo -e "$YELLOW_TEXT------------------------ $BLUE_TEXT"
         cat ./${{ env.DEPLOY_FOLDER }}/destructiveChanges/destructiveChanges.xml
       shell: bash
 
