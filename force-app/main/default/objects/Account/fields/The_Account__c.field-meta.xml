@@ -3,7 +3,7 @@
     <fullName>The_Account__c</fullName>
     <externalId>false</externalId>
     <label>The Account</label>
-    <description>A description of the field</description>
+    <description>A longer description of the field</description>
     <length>100</length>
     <required>false</required>
     <trackFeedHistory>false</trackFeedHistory>
