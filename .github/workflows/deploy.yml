@@ -1,0 +1,81 @@
+name: 'Deploy'
+on:
+  workflow_call:
+    inputs:
+      SANDBOX_TARGET:
+        description: 'The name of the Salesforce instance to build to.'
+        type: string
+        required: true
+      ENVIRONMENT:
+        description: 'The environment to run the job on.'
+        type: string
+        required: true
+      TO_BRANCH:
+        description: 'The branch to compare'
+        type: string
+        required: true
+      FROM_BRANCH:
+        description: 'The base branch for the compare.'
+        type: string
+        required: true
+      BUILD_TYPE:
+        description: 'The type of the build to perform - Check|Deploy.'
+        type: string
+        required: true
+        default: check
+    secrets:
+      CONSUMER_KEY:
+        required: true
+      SFDX_USERNAME:
+        required: true
+      SFDC_INSTANCE_URL:
+        required: true
+      SFDX_SERVER_KEY:
+        required: true
+
+defaults:
+  run:
+    shell: bash
+env:
+  RED_TEXT: '\033[0;31m'
+  GREEN_TEXT: '\033[0;32m'
+  BLUE_TEXT: '\033[0;34m'
+  YELLOW_TEXT: '\033[1;33m'
+  RESET_TEXT: '\033[0m'
+  FORCE_APP_FOLDER: force-app
+  DEPLOY_FOLDER: deployFolder
+
+jobs:
+  cicd:
+    runs-on: ubuntu-latest
+    container: petercaitensnano/sf-build:latest
+    concurrency:
+      group: ${{ inputs.SANDBOX_TARGET }}
+    environment:
+      name: ${{ inputs.ENVIRONMENT }}
+
+    steps:
+      - name: Checkout Current Branch
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Authorise Salesforce [${{ inputs.SANDBOX_TARGET }}] Org
+        run: |
+          echo "${{ secrets.SFDX_SERVER_KEY }}" > server.key
+          tree .
+          sfdx force:auth:jwt:grant --clientid ${{ secrets.CONSUMER_KEY }} --username ${{ secrets.SFDX_USERNAME }} --instanceurl ${{ secrets.SFDC_INSTANCE_URL }} --jwtkeyfile server.key --setdefaultusername
+          rm server.key
+
+      - name: Compare changes to [${{ inputs.FROM_BRANCH }}] Branch
+        run: |
+          mkdir -p ${{ env.DEPLOY_FOLDER }}
+          export HOME=/root && sfdx sgd:source:delta --from origin/${{ inputs.FROM_BRANCH }} --to HEAD --output ${{ env.DEPLOY_FOLDER }} --generate-delta --source ${{ env.FORCE_APP_FOLDER}}/ --ignore build-settings/deployIgnore --ignore-destructive build-settings/destructiveIgnore
+
+      - name: ${{ inputs.BUILD_TYPE }} changes between branches [${{ inputs.TO_BRANCH }}] and [${{ inputs.FROM_BRANCH }}] into Salesforce [${{ inputs.SANDBOX_TARGET }}] Org
+        uses: ./.github/actions/sfdx-deploy-changes
+        with:
+          from-branch: ${{ inputs.FROM_BRANCH }}
+          to-branch: 'HEAD'
+          target-environment: ${{ inputs.SANDBOX_TARGET }}
+          build-type: ${{ inputs.BUILD_TYPE }}
