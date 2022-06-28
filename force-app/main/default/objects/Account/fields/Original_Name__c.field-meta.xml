@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>The_Account__c</fullName>
-    <description>A longer description of the field</description>
+    <fullName>Original_Name__c</fullName>
+    <description>The original name of the Account</description>
     <externalId>false</externalId>
-    <label>The Account</label>
-    <length>100</length>
+    <label>Original Name</label>
+    <length>200</length>
     <required>false</required>
     <trackFeedHistory>false</trackFeedHistory>
     <type>Text</type>
